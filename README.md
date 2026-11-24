@@ -80,6 +80,8 @@ A minimal policy to use the issuer with an authority would look like follows:
 }
 ```
 
+If you want to limit what the issuer is allowed to issue, AWS Private CA lets you put [conditions on the certificate itself](https://docs.aws.amazon.com/privateca/latest/userguide/certguard-condition-keys.html) in this policy, such as its subject, SANs or validity period. Make sure the conditions cover everything your `Certificate` resources ask for, otherwise those requests are denied. Read [Before you deploy a policy](https://docs.aws.amazon.com/privateca/latest/userguide/certguard-before-you-deploy.html) first.
+
 ## Usage
 
 This operator provides two custom resources that you can use.
@@ -351,6 +353,10 @@ For the most part, updating end-to-end will be updating these "issuer specs" and
 1. Check the secret with the AWS credentials: AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY values have to be base64 encoded.
 
 2. If the generated CertificateRequest shows no events, it is very likely that you're using an older version of cert-manager which doesn't support approval check. Disable approval check at the issuer deployment.
+
+3. If a CertificateRequest fails with `AccessDeniedException` on `IssueCertificate` even though the policy from [Configuration](#configuration) is in place, check whether any policy on the CA uses `acm-pca:x509*` condition keys. The error doesn't say which condition failed, so you have to compare the certificate you requested against each one. The AWS Private CA guide has a [troubleshooting page](https://docs.aws.amazon.com/privateca/latest/userguide/troubleshoot-certguard.html) for this.
+
+4. If a CertificateRequest fails with `MalformedCSRException`, AWS Private CA couldn't read something in the request, for example an EC key without a named curve or an empty SAN entry. Fix the key or the SANs on the `Certificate` and try again. The AWS Private CA guide has a [troubleshooting page](https://docs.aws.amazon.com/privateca/latest/userguide/troubleshoot-certguard-malformed-csr.html) for this error too.
 
 ## Help & Feedback
 
